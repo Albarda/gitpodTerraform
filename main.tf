@@ -6,6 +6,12 @@ terraform {
     }
   }
 
+  backend "s3" {
+    bucket = "alon-be-dev"
+    key    = "gitpodTerraform/terraform.tfstate.json"
+    region = "eu-west-1"
+    # optional: dynamodb_table = "<table-name>"
+  }
   required_version = ">= 1.0.0"
 }
 
@@ -16,15 +22,15 @@ provider "aws" {
 }
 
 resource "aws_instance" "web" {
-  ami           = "ami-00aab5dfc482cf66d"
-  instance_type = var.env == "prod" ? "t2.micro" : "t2.nano"
+  ami                    = "ami-00aab5dfc482cf66d"
+  instance_type          = var.env == "prod" ? "t2.micro" : "t2.nano"
   vpc_security_group_ids = [aws_security_group.sg_web.id]
-    depends_on = [
-   aws_s3_bucket.data_bucket
-]
+  depends_on = [
+    aws_s3_bucket.data_bucket
+  ]
   tags = {
-    Name = "${var.resource_alias}-${var.env}"
-    
+    Name = "${var.ec2_alias}-${var.env}"
+
 
   }
 }
@@ -40,17 +46,17 @@ resource "aws_security_group" "sg_web" {
   }
 
   tags = {
-    Env         = var.env
-    Terraform   = true
+    Env       = var.env
+    Terraform = true
   }
 }
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "${var.resource_alias}-${var.env}-bucket"
+  bucket = "${var.ec2_alias}-${var.env}-bucket"
 
   tags = {
-    Name        = "${var.resource_alias}-bucket"
-    Env         = var.env
-    Terraform   = true
+    Name      = "${var.resource_alias}-bucket"
+    Env       = var.env
+    Terraform = true
   }
 
 }
@@ -68,8 +74,8 @@ module "app_vpc" {
   enable_nat_gateway = false
 
   tags = {
-    Name        = "${var.resource_alias}-vpc"
-    Env         = var.env
-    Terraform   = true
+    Name      = "${var.resource_alias}-vpc"
+    Env       = var.env
+    Terraform = true
   }
 }
